@@ -61,7 +61,7 @@ df["Utilidad"] = df["Ingreso_Total"] - df["Gastos_Totales"]
 df["Margen_%"] = (df["Utilidad"] / df["Ingreso_Total"]) * 100
 
 # --- 3. BARRA LATERAL (FILTROS) ---
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2830/2830534.png", width=100) # Un logo genérico
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2318/2318464.png", width=120)
 st.sidebar.header("Filtrar Reporte")
 filtro_obra = st.sidebar.multiselect(
     "Seleccionar Obra:",
@@ -131,3 +131,4 @@ st.dataframe(
     }).background_gradient(subset=["Utilidad"], cmap="RdYlGn"), # Colorea verde lo alto, rojo lo bajo
     use_container_width=True
 )
+
