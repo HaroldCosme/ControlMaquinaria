@@ -5,12 +5,12 @@ import plotly.express as px
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="Sistema Integral Maquinaria", layout="wide", page_icon="🏗️")
 
-# Logo de construcción
+# Logo de construcción (Cambiamos el oso por una excavadora)
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2318/2318464.png", width=120)
 st.sidebar.title("Panel de Control")
 
 # --- 1. BASE DE DATOS UNIFICADA (Simulación completa) ---
-# Aquí mezclamos todo: Datos financieros (Tarifas) y Operativos (Horómetros/Diesel)
+# Aquí mezclamos todo: Datos financieros (Mes) y Operativos (Día)
 data = [
     {
         "ID": "GR-01", "Equipo": "Grúa Terex 90T", "Ubicación": "Mina Chinalco", "Estado": "Operativo", "Operador": "Juan Pérez",
@@ -81,6 +81,7 @@ st.sidebar.markdown("---")
 st.sidebar.info("Sistema v1.2 - Modo Demo")
 
 # --- 4. CREACIÓN DE PESTAÑAS (TABS) ---
+# Aquí está la magia para separar las vistas
 tab1, tab2 = st.tabs(["💰 Gerencia y Finanzas", "⛽ Parte Diario y Combustible"])
 
 # ==========================================
@@ -129,7 +130,7 @@ with tab2:
     
     st.divider()
     
-    # LA TABLA DETALLADA QUE PEDISTE
+    # LA TABLA DETALLADA QUE PEDISTE (Inicio/Fin de todo)
     st.subheader("📋 Planilla de Control Diario")
     st.dataframe(
         df_filtrado[[
@@ -144,5 +145,5 @@ with tab2:
         use_container_width=True
     )
     
-    # Gráfico de Consumo
+    # Nota para el jefe
     st.caption("Nota: Si la columna de Ratio (gl/h) se pone roja, la máquina está consumiendo más de lo normal.")
