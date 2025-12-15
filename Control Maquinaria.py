@@ -1,116 +1,148 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import datetime
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
-st.set_page_config(page_title="Parte Diario de Maquinaria", layout="wide", page_icon="⛽")
+st.set_page_config(page_title="Sistema Integral Maquinaria", layout="wide", page_icon="🏗️")
 
-# Cambiamos el logo a una excavadora
+# Logo de construcción
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2318/2318464.png", width=120)
+st.sidebar.title("Panel de Control")
 
-st.title("⛽ Control de Combustible y Horómetros - Diario")
-
-# --- 1. DATOS SIMULADOS (Parte Diario) ---
-# Agregamos: Fecha, Niveles de Inicio/Fin tanto de Diesel como de Horómetro
+# --- 1. BASE DE DATOS UNIFICADA (Simulación completa) ---
+# Aquí mezclamos todo: Datos financieros (Tarifas) y Operativos (Horómetros/Diesel)
 data = [
     {
-        "ID": "GR-01", "Equipo": "Grúa Terex 90T", "Ubicación": "Mina Chinalco", "Estado": "Operativo",
-        "Fecha": "2023-12-15",
-        "Diesel_Inicio_Gal": 50,  "Diesel_Fin_Gal": 42, # Consumió 8 galones
-        "Horometro_Inicio": 5420, "Horometro_Fin": 5428, # Trabajó 8 horas
-        "Operador": "Juan Pérez"
+        "ID": "GR-01", "Equipo": "Grúa Terex 90T", "Ubicación": "Mina Chinalco", "Estado": "Operativo", "Operador": "Juan Pérez",
+        # Datos Financieros (Mes)
+        "Horas_Mes": 180, "Tarifa_Hora": 180.00, "Gasto_Combustible_Mes": 4500, "Gasto_Viaticos": 1200,
+        # Datos Diario (Hoy)
+        "Fecha_Hoy": "2023-12-15",
+        "Diesel_Inicio": 50, "Diesel_Fin": 42, 
+        "H_Inicio": 5420, "H_Fin": 5428
     },
     {
-        "ID": "GR-03", "Equipo": "Grúa Zoomlion 110T", "Ubicación": "Minera Deysi", "Estado": "Operativo",
-        "Fecha": "2023-12-15",
-        "Diesel_Inicio_Gal": 80,  "Diesel_Fin_Gal": 65, # Consumió 15 galones
-        "Horometro_Inicio": 1200, "Horometro_Fin": 1210, # Trabajó 10 horas
-        "Operador": "Luis Quispe"
+        "ID": "GR-02", "Equipo": "Grúa Terex 90T", "Ubicación": "Piura", "Estado": "Mantenimiento", "Operador": "Carlos Diaz",
+        # Datos Financieros
+        "Horas_Mes": 20, "Tarifa_Hora": 180.00, "Gasto_Combustible_Mes": 500, "Gasto_Viaticos": 800,
+        # Datos Diario
+        "Fecha_Hoy": "2023-12-15",
+        "Diesel_Inicio": 20, "Diesel_Fin": 20, # No trabajó
+        "H_Inicio": 3100, "H_Fin": 3100
     },
     {
-        "ID": "DP-01", "Equipo": "Dumper Volvo A40", "Ubicación": "Minera Deysi", "Estado": "Operativo",
-        "Fecha": "2023-12-15",
-        "Diesel_Inicio_Gal": 100, "Diesel_Fin_Gal": 80, # Consumió 20 galones
-        "Horometro_Inicio": 8500, "Horometro_Fin": 8510, # Trabajó 10 horas
-        "Operador": "Mario T."
+        "ID": "GR-03", "Equipo": "Grúa Zoomlion 110T", "Ubicación": "Minera Deysi", "Estado": "Operativo", "Operador": "Luis Quispe",
+        # Datos Financieros
+        "Horas_Mes": 210, "Tarifa_Hora": 220.00, "Gasto_Combustible_Mes": 5800, "Gasto_Viaticos": 1500,
+        # Datos Diario
+        "Fecha_Hoy": "2023-12-15",
+        "Diesel_Inicio": 80, "Diesel_Fin": 65, 
+        "H_Inicio": 1200, "H_Fin": 1210
     },
     {
-        "ID": "EX-01", "Equipo": "Excavadora Volvo", "Ubicación": "Piura", "Estado": "Stand-by",
-        "Fecha": "2023-12-15",
-        "Diesel_Inicio_Gal": 40,  "Diesel_Fin_Gal": 40, # No consumió
-        "Horometro_Inicio": 4400, "Horometro_Fin": 4400, # No trabajó
-        "Operador": "Sin Asignar"
+        "ID": "DP-01", "Equipo": "Dumper Volvo A40", "Ubicación": "Minera Deysi", "Estado": "Operativo", "Operador": "Mario T.",
+        # Datos Financieros
+        "Horas_Mes": 250, "Tarifa_Hora": 140.00, "Gasto_Combustible_Mes": 8000, "Gasto_Viaticos": 1200,
+        # Datos Diario
+        "Fecha_Hoy": "2023-12-15",
+        "Diesel_Inicio": 100, "Diesel_Fin": 80, 
+        "H_Inicio": 8500, "H_Fin": 8510
     },
     {
-        "ID": "ZM-02", "Equipo": "Grúa Zoomlion 130T", "Ubicación": "Mina Chinalco", "Estado": "Operativo",
-        "Fecha": "2023-12-15",
-        "Diesel_Inicio_Gal": 120, "Diesel_Fin_Gal": 105, # Consumió 15 galones
-        "Horometro_Inicio": 2100, "Horometro_Fin": 2108, # Trabajó 8 horas
-        "Operador": "Pedro A."
-    },
+        "ID": "ZM-02", "Equipo": "Grúa Zoomlion 130T", "Ubicación": "Mina Chinalco", "Estado": "Operativo", "Operador": "Pedro A.",
+        # Datos Financieros
+        "Horas_Mes": 195, "Tarifa_Hora": 250.00, "Gasto_Combustible_Mes": 6200, "Gasto_Viaticos": 1500,
+        # Datos Diario
+        "Fecha_Hoy": "2023-12-15",
+        "Diesel_Inicio": 120, "Diesel_Fin": 105, 
+        "H_Inicio": 2100, "H_Fin": 2108
+    }
 ]
 
 df = pd.DataFrame(data)
 
-# --- 2. CÁLCULOS DE INGENIERÍA (Rendimiento) ---
-# Calculamos la diferencia del día
-df["Horas_Trabajadas"] = df["Horometro_Fin"] - df["Horometro_Inicio"]
-df["Consumo_Galones"] = df["Diesel_Inicio_Gal"] - df["Diesel_Fin_Gal"]
+# --- 2. CÁLCULOS AUTOMÁTICOS (Backend) ---
+# Financieros
+df["Ingreso_Total"] = df["Horas_Mes"] * df["Tarifa_Hora"]
+df["Gastos_Totales"] = df["Gasto_Combustible_Mes"] + df["Gasto_Viaticos"]
+df["Utilidad"] = df["Ingreso_Total"] - df["Gastos_Totales"]
 
-# Calculamos el Ratio (Galones por Hora) - Vital para ver si están robando combustible
-# Si Horas es 0, ponemos 0 para evitar error de división
-df["Galones_por_Hora"] = df.apply(lambda row: row["Consumo_Galones"] / row["Horas_Trabajadas"] if row["Horas_Trabajadas"] > 0 else 0, axis=1)
+# Operativos (Diario)
+df["Consumo_Galones"] = df["Diesel_Inicio"] - df["Diesel_Fin"]
+df["Horas_Trabajadas_Hoy"] = df["H_Fin"] - df["H_Inicio"]
+# Evitar división por cero
+df["Ratio_Gal_Hr"] = df.apply(lambda x: x["Consumo_Galones"] / x["Horas_Trabajadas_Hoy"] if x["Horas_Trabajadas_Hoy"] > 0 else 0, axis=1)
 
-# --- 3. BARRA LATERAL ---
-st.sidebar.header("Filtros")
-filtro_obra = st.sidebar.multiselect("Obra:", df["Ubicación"].unique(), default=df["Ubicación"].unique())
+# --- 3. BARRA LATERAL COMÚN ---
+filtro_obra = st.sidebar.multiselect("Filtrar por Obra:", df["Ubicación"].unique(), default=df["Ubicación"].unique())
 df_filtrado = df[df["Ubicación"].isin(filtro_obra)]
 
-# --- 4. KPI'S DE CONSUMO ---
-total_galones = df_filtrado["Consumo_Galones"].sum()
-total_horas = df_filtrado["Horas_Trabajadas"].sum()
+st.sidebar.markdown("---")
+st.sidebar.info("Sistema v1.2 - Modo Demo")
 
-c1, c2, c3 = st.columns(3)
-c1.metric("Total Horas Hoy", f"{total_horas} hrs")
-c2.metric("Total Combustible Consumido", f"{total_galones} gal")
-# Ratio Promedio de la flota seleccionada
-ratio_promedio = total_galones / total_horas if total_horas > 0 else 0
-c3.metric("Rendimiento Promedio", f"{ratio_promedio:.1f} gal/hora", delta="Eficiencia Flota")
+# --- 4. CREACIÓN DE PESTAÑAS (TABS) ---
+tab1, tab2 = st.tabs(["💰 Gerencia y Finanzas", "⛽ Parte Diario y Combustible"])
 
-st.divider()
+# ==========================================
+# PESTAÑA 1: LO FINANCIERO (Para el Jefe)
+# ==========================================
+with tab1:
+    st.header("📊 Rentabilidad Mensual")
+    
+    # KPIs Financieros
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Facturación Total", f"S/ {df_filtrado['Ingreso_Total'].sum():,.2f}")
+    col2.metric("Gastos Operativos", f"S/ {df_filtrado['Gastos_Totales'].sum():,.2f}", delta="- Costos", delta_color="inverse")
+    col3.metric("Utilidad Neta", f"S/ {df_filtrado['Utilidad'].sum():,.2f}", delta="Ganancia")
+    col4.metric("Máquinas Activas", len(df_filtrado[df_filtrado['Estado']=='Operativo']))
+    
+    st.divider()
+    
+    c1, c2 = st.columns(2)
+    with c1:
+        # Gráfico Rentabilidad
+        df_melt = df_filtrado.melt(id_vars=["Equipo"], value_vars=["Ingreso_Total", "Gastos_Totales"], var_name="Tipo", value_name="Monto")
+        fig = px.bar(df_melt, x="Equipo", y="Monto", color="Tipo", barmode="group", title="Ingresos vs Gastos", color_discrete_map={"Ingreso_Total": "#2ecc71", "Gastos_Totales": "#e74c3c"})
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with c2:
+        # Tabla Financiera Resumida
+        st.subheader("Detalle de Utilidad")
+        st.dataframe(
+            df_filtrado[["Equipo", "Ingreso_Total", "Gastos_Totales", "Utilidad"]].style.format("S/ {:,.2f}").background_gradient(subset=["Utilidad"], cmap="RdYlGn"),
+            use_container_width=True
+        )
 
-# --- 5. TABLA DE CONTROL DIARIO (Lo que pediste) ---
-st.subheader("📋 Parte Diario Detallado")
-
-st.dataframe(
-    df_filtrado[[
-        "Fecha", "Equipo", "Ubicación", 
-        "Diesel_Inicio_Gal", "Diesel_Fin_Gal", "Consumo_Galones",
-        "Horometro_Inicio", "Horometro_Fin", "Horas_Trabajadas", 
-        "Galones_por_Hora"
-    ]].style.format({
-        "Diesel_Inicio_Gal": "{:.1f} gl",
-        "Diesel_Fin_Gal": "{:.1f} gl",
-        "Consumo_Galones": "{:.1f} gl",
-        "Horometro_Inicio": "{:,.1f}",
-        "Horometro_Fin": "{:,.1f}",
-        "Horas_Trabajadas": "{:.1f} hrs",
-        "Galones_por_Hora": "{:.2f} gl/h"
-    }).background_gradient(subset=["Consumo_Galones"], cmap="Reds"), # Pinta rojo si consumió mucho
-    use_container_width=True
-)
-
-# --- 6. GRÁFICO DE RENDIMIENTO ---
-st.subheader("📊 Análisis de Consumo (¿Quién gasta más?)")
-# Muestra quién consumió más combustible vs horas trabajadas
-fig = px.scatter(
-    df_filtrado, 
-    x="Horas_Trabajadas", 
-    y="Consumo_Galones", 
-    size="Galones_por_Hora", 
-    color="Equipo",
-    hover_name="Equipo",
-    title="Eficiencia: Arriba a la izquierda = Alto Consumo (¡Ojo!)"
-)
-st.plotly_chart(fig, use_container_width=True)
+# ==========================================
+# PESTAÑA 2: LO OPERATIVO (Lo nuevo que pediste)
+# ==========================================
+with tab2:
+    st.header("🚜 Control Diario de Operaciones")
+    st.markdown("**Registro de Horómetros y Combustible - Turno Día**")
+    
+    # KPIs Operativos
+    k1, k2, k3 = st.columns(3)
+    k1.metric("Total Horas Hoy", f"{df_filtrado['Horas_Trabajadas_Hoy'].sum()} hrs")
+    k2.metric("Consumo Diesel Hoy", f"{df_filtrado['Consumo_Galones'].sum()} gal")
+    promedio_fleet = df_filtrado['Consumo_Galones'].sum() / df_filtrado['Horas_Trabajadas_Hoy'].sum() if df_filtrado['Horas_Trabajadas_Hoy'].sum() > 0 else 0
+    k3.metric("Rendimiento Flota", f"{promedio_fleet:.1f} gal/hr", delta="Consumo Promedio")
+    
+    st.divider()
+    
+    # LA TABLA DETALLADA QUE PEDISTE
+    st.subheader("📋 Planilla de Control Diario")
+    st.dataframe(
+        df_filtrado[[
+            "Fecha_Hoy", "Equipo", "Operador", 
+            "Diesel_Inicio", "Diesel_Fin", "Consumo_Galones",
+            "H_Inicio", "H_Fin", "Horas_Trabajadas_Hoy", "Ratio_Gal_Hr"
+        ]].style.format({
+            "Diesel_Inicio": "{:.1f} gl", "Diesel_Fin": "{:.1f} gl", "Consumo_Galones": "{:.1f} gl",
+            "H_Inicio": "{:,.1f}", "H_Fin": "{:,.1f}", 
+            "Horas_Trabajadas_Hoy": "{:.1f} hrs", "Ratio_Gal_Hr": "{:.2f} gl/h"
+        }).background_gradient(subset=["Ratio_Gal_Hr"], cmap="Reds"), # Rojo si consume mucho
+        use_container_width=True
+    )
+    
+    # Gráfico de Consumo
+    st.caption("Nota: Si la columna de Ratio (gl/h) se pone roja, la máquina está consumiendo más de lo normal.")
